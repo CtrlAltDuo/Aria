@@ -9,7 +9,7 @@ class GeminiClient:
     def __init__(self, api_key: str):
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash-latest",
+            model_name="gemini-2.0-flash",
             system_instruction=SYSTEM_PROMPT
         )
 
