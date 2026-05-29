@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+google-generativeai
+ollama
+pyautogui
+mss
+pillow
+python-dotenv
+websockets
+pydantic
