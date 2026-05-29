@@ -6,11 +6,11 @@ import json
 import os
 import asyncio
 
-from db.database import engine, Base, get_db
-from tasks import manager
-from agent.loop import run_task
-from utils.logger import logger
-from utils.config import load_config
+from backend.db.database import engine, Base, get_db
+from backend.tasks import manager
+from backend.agent.loop import run_task
+from backend.utils.logger import logger
+from backend.utils.config import load_config
 
 # Load config and create tables
 load_config()
