@@ -1,22 +1,14 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from .prompts import SYSTEM_PROMPT
 import json
 import base64
-from io import BytesIO
-from PIL import Image
 
 class GeminiClient:
     def __init__(self, api_key: str):
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash-latest",
-            system_instruction=SYSTEM_PROMPT
-        )
+        self.client = genai.Client(api_key=api_key)
 
     def ask(self, screenshot_base64: str, instruction: str, history: list) -> dict:
-        image_data = base64.b64decode(screenshot_base64)
-        image = Image.open(BytesIO(image_data))
-        
         prompt = f"Instruction: {instruction}\n"
         if history:
             prompt += "Recent Actions:\n"
@@ -24,10 +16,21 @@ class GeminiClient:
                 prompt += f"- {json.dumps(act)}\n"
         prompt += "\nWhat is the next action?"
 
-        response = self.model.generate_content([image, prompt])
+        part = types.Part.from_bytes(
+            data=base64.b64decode(screenshot_base64),
+            mime_type='image/png',
+        )
+
+        response = self.client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[part, prompt],
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+            )
+        )
         
         text = response.text
-        # Strip potential markdown formatting if model didn't listen perfectly
+        # Strip potential markdown formatting
         if text.startswith("```json"):
             text = text[7:]
         if text.startswith("```"):

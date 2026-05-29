@@ -17,10 +17,11 @@ function createWindow() {
   });
 
   // Start the Python backend
-  const backendPath = path.join(__dirname, '..', 'backend', 'main.py');
+  const fs = require('fs');
+  const venvPythonPath = path.join(__dirname, '..', 'backend', 'venv', 'bin', 'python3');
+  const pythonCmd = fs.existsSync(venvPythonPath) ? venvPythonPath : 'python3';
   
-  // Use Python command depending on platform. Usually 'python3' or 'python'
-  pythonProcess = spawn('python3', ['-m', 'uvicorn', 'backend.main:app', '--reload', '--port', '8000'], {
+  pythonProcess = spawn(pythonCmd, ['-m', 'uvicorn', 'backend.main:app', '--reload', '--port', '8000'], {
     cwd: path.join(__dirname, '..')
   });
 
