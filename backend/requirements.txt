@@ -9,3 +9,6 @@ pillow
 python-dotenv
 websockets
 pydantic
+pygetwindow
+pyperclip
+pynput

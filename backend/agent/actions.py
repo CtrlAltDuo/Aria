@@ -1,5 +1,7 @@
 import pyautogui
 import time
+import pyperclip
+import subprocess
 
 # Add a tiny fail-safe delay for PyAutoGUI
 pyautogui.PAUSE = 0.5
@@ -35,6 +37,29 @@ def execute(action_json: dict) -> bool:
         elif action == "wait":
             time.sleep(2)
             
+        elif action == "copy":
+            text = action_json.get("text")
+            if text:
+                pyperclip.copy(text)
+
+        elif action == "paste":
+            text = action_json.get("text")
+            if text:
+                pyperclip.copy(text)
+                time.sleep(0.1)
+                import platform
+                if platform.system() == "Darwin":
+                    pyautogui.hotkey('command', 'v')
+                else:
+                    pyautogui.hotkey('ctrl', 'v')
+
+        elif action == "run_command":
+            cmd = action_json.get("command")
+            if cmd:
+                # Run the command in the background, we don't wait for output here
+                # to prevent blocking the agent loop if it's a long running app (like 'gedit' or 'notepad')
+                subprocess.Popen(cmd, shell=True)
+                
         elif action in ["done", "fail"]:
             pass # Handled by the loop
             
