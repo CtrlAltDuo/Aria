@@ -6,6 +6,17 @@ from ..db.database import SessionLocal
 from ..db.models import Task, ActionLog
 import asyncio
 import datetime
+import pygetwindow as gw
+from pynput import keyboard
+
+def get_active_window_title():
+    try:
+        window = gw.getActiveWindow()
+        if window:
+            return window.title
+    except Exception:
+        pass
+    return None
 
 async def run_task(task_id: str, instruction: str, broadcast_fn):
     db = SessionLocal()
@@ -16,6 +27,24 @@ async def run_task(task_id: str, instruction: str, broadcast_fn):
 
     task.status = "running"
     db.commit()
+
+    # Setup Safety Kill Switch
+    def on_activate():
+        nonlocal task
+        task.status = "cancelled"
+        try:
+            db.commit()
+            print("KILL SWITCH ACTIVATED. Task cancelled.")
+        except Exception:
+            pass
+
+    listener = None
+    try:
+        hotkey = keyboard.GlobalHotKeys({'<ctrl>+<shift>+x': on_activate})
+        hotkey.start()
+        listener = hotkey
+    except Exception as e:
+        print(f"Warning: Could not start kill-switch listener (needs accessibility permissions): {e}")
 
     ai = AIClient()
     history = []
@@ -30,12 +59,15 @@ async def run_task(task_id: str, instruction: str, broadcast_fn):
             if task.status != "running":
                 break
 
-            # 2. Take screenshot
+            # 2. Get active window context
+            active_window = get_active_window_title()
+
+            # 3. Take screenshot
             screenshot = take_screenshot()
 
-            # 3. Send to AI
+            # 4. Send to AI
             try:
-                action_json = ai.ask(screenshot, instruction, history[-10:])
+                action_json = ai.ask(screenshot, instruction, history[-10:], active_window)
             except Exception as e:
                 action_json = {
                     "action": "fail",
@@ -106,4 +138,6 @@ async def run_task(task_id: str, instruction: str, broadcast_fn):
         task.completed_at = datetime.datetime.utcnow()
         db.commit()
     finally:
+        if listener:
+            listener.stop()
         db.close()

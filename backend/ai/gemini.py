@@ -8,8 +8,10 @@ class GeminiClient:
     def __init__(self, api_key: str):
         self.client = genai.Client(api_key=api_key)
 
-    def ask(self, screenshot_base64: str, instruction: str, history: list) -> dict:
+    def ask(self, screenshot_base64: str, instruction: str, history: list, active_window: str = None) -> dict:
         prompt = f"Instruction: {instruction}\n"
+        if active_window:
+            prompt += f"Active Window: {active_window}\n"
         if history:
             prompt += "Recent Actions:\n"
             for act in history:

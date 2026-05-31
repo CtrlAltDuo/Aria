@@ -8,8 +8,10 @@ class OllamaClient:
         # Using minicpm-v as an example local vision model, though qwen2-vl or llava are also options.
         self.model = "qwen2-vl" 
 
-    def ask(self, screenshot_base64: str, instruction: str, history: list) -> dict:
+    def ask(self, screenshot_base64: str, instruction: str, history: list, active_window: str = None) -> dict:
         prompt = f"Instruction: {instruction}\n"
+        if active_window:
+            prompt += f"Active Window: {active_window}\n"
         if history:
             prompt += "Recent Actions:\n"
             for act in history:
