@@ -31,18 +31,18 @@ class AIClient:
             
         self.ollama = OllamaClient(url=ollama_url)
 
-    def ask(self, screenshot_base64: str, instruction: str, history: list, active_window: str = None) -> dict:
+    def ask(self, screenshot_base64: str, instruction: str, history: list, active_window: str = None, ui_tree: list = None) -> dict:
         self._initialize_clients()
         
         settings = get_settings()
         provider = settings.get("AI_PROVIDER") or os.getenv("AI_PROVIDER", "auto")
         
         if provider == "gemini" and self.gemini:
-            return self.gemini.ask(screenshot_base64, instruction, history, active_window)
+            return self.gemini.ask(screenshot_base64, instruction, history, active_window, ui_tree)
         elif provider == "ollama":
-            return self.ollama.ask(screenshot_base64, instruction, history, active_window)
+            return self.ollama.ask(screenshot_base64, instruction, history, active_window, ui_tree)
         else: # auto
             if self.gemini:
-                return self.gemini.ask(screenshot_base64, instruction, history, active_window)
+                return self.gemini.ask(screenshot_base64, instruction, history, active_window, ui_tree)
             else:
-                return self.ollama.ask(screenshot_base64, instruction, history, active_window)
+                return self.ollama.ask(screenshot_base64, instruction, history, active_window, ui_tree)

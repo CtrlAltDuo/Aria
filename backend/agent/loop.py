@@ -1,6 +1,7 @@
 import os
 from .screen import take_screenshot
 from .actions import execute
+from .accessibility import get_accessibility_tree
 from ..ai.client import AIClient
 from ..db.database import SessionLocal
 from ..db.models import Task, ActionLog
@@ -60,14 +61,17 @@ async def run_task(task_id: str, instruction: str, broadcast_fn):
                 break
 
             # 2. Get active window context
-            active_window = get_active_window_title()
+            active_window = await asyncio.to_thread(get_active_window_title)
+            
+            # Extract Accessibility Tree
+            ui_tree = await asyncio.to_thread(get_accessibility_tree)
 
             # 3. Take screenshot
-            screenshot = take_screenshot()
+            screenshot = await asyncio.to_thread(take_screenshot)
 
             # 4. Send to AI
             try:
-                action_json = ai.ask(screenshot, instruction, history[-10:], active_window)
+                action_json = await asyncio.to_thread(ai.ask, screenshot, instruction, history[-10:], active_window, ui_tree)
             except Exception as e:
                 action_json = {
                     "action": "fail",
@@ -100,7 +104,7 @@ async def run_task(task_id: str, instruction: str, broadcast_fn):
             await broadcast_fn(log_dict)
 
             # 6. Execute action
-            success = execute(action_json)
+            success = await asyncio.to_thread(execute, action_json)
             if not success and action_json.get("action") not in ["done", "fail"]:
                 # Force fail on execute error
                 action_json["action"] = "fail"
